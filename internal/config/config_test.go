@@ -27,16 +27,19 @@ func TestDefaultConfig(t *testing.T) {
 	if !strings.HasSuffix(cfg.EventFile, "/today/event.json") {
 		t.Fatalf("EventFile = %q, want suffix %q", cfg.EventFile, "/today/event.json")
 	}
+	if cfg.TempDir == "" {
+		t.Fatal("TempDir is empty")
+	}
 }
 
 func TestConfigFlagHelpers(t *testing.T) {
 	var nilCfg *Config
-	if nilCfg.IsVersion() || nilCfg.IsDebug() || nilCfg.IsHoliday() || nilCfg.IsSolarTerm() || nilCfg.IsOtherEvents() {
+	if nilCfg.IsVersion() || nilCfg.IsDebug() || nilCfg.IsHoliday() || nilCfg.IsSolarTerm() || nilCfg.IsOtherEvents() || nilCfg.IsJSON() {
 		t.Fatal("nil config helper should return false")
 	}
 
 	cfg := &Config{}
-	if cfg.IsVersion() || cfg.IsDebug() || cfg.IsHoliday() || cfg.IsSolarTerm() || cfg.IsOtherEvents() {
+	if cfg.IsVersion() || cfg.IsDebug() || cfg.IsHoliday() || cfg.IsSolarTerm() || cfg.IsOtherEvents() || cfg.IsJSON() {
 		t.Fatal("default helper flags should be false")
 	}
 
@@ -45,7 +48,8 @@ func TestConfigFlagHelpers(t *testing.T) {
 	cfg.HolidayFlag = true
 	cfg.SolarTermFlag = true
 	cfg.OtherEventsFlag = true
-	if !cfg.IsVersion() || !cfg.IsDebug() || !cfg.IsHoliday() || !cfg.IsSolarTerm() || !cfg.IsOtherEvents() {
+	cfg.JSONFlag = true
+	if !cfg.IsVersion() || !cfg.IsDebug() || !cfg.IsHoliday() || !cfg.IsSolarTerm() || !cfg.IsOtherEvents() || !cfg.IsJSON() {
 		t.Fatal("helper flags should reflect explicit flags")
 	}
 
@@ -80,7 +84,7 @@ func TestOpenEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("good.OpenEvent() error = %v", err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	b, err := io.ReadAll(r)
 	if err != nil {
 		t.Fatalf("ReadAll() error = %v", err)

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	holidayEventTitlesFetcher = fetchHolidayEventTitles
+	holidayEventTitlesFetcher   = fetchHolidayEventTitles
 	solarTermEventTitlesFetcher = fetchSolarTermEventTitles
 )
 
@@ -88,11 +88,13 @@ func (i *InfoDate) String() string {
 	return strings.Join(i.Strings(), "\n")
 }
 
-func (i *InfoDate) ImportHoliday() error {
+// ImportHoliday imports holiday information for the date from the specified temporary directory.
+// It returns an error if the InfoDate instance is nil or if fetching the holiday information fails.
+func (i *InfoDate) ImportHoliday(tempDir string) error {
 	if i == nil {
 		return errs.Wrap(ecode.ErrNullPointer)
 	}
-	titles, err := holidayEventTitlesFetcher(i.date)
+	titles, err := holidayEventTitlesFetcher(i.date, tempDir)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", i.date.String()))
 	}
@@ -100,11 +102,13 @@ func (i *InfoDate) ImportHoliday() error {
 	return nil
 }
 
-func (i *InfoDate) ImportSolarTerm() error {
+// ImportSolarTerm imports solar term information for the date from the specified temporary directory.
+// It returns an error if the InfoDate instance is nil or if fetching the solar term information fails.
+func (i *InfoDate) ImportSolarTerm(tempDir string) error {
 	if i == nil {
 		return errs.Wrap(ecode.ErrNullPointer)
 	}
-	titles, err := solarTermEventTitlesFetcher(i.date)
+	titles, err := solarTermEventTitlesFetcher(i.date, tempDir)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", i.date.String()))
 	}
@@ -112,11 +116,14 @@ func (i *InfoDate) ImportSolarTerm() error {
 	return nil
 }
 
-func fetchHolidayEventTitles(dt value.DateJp) ([]string, error) {
+// fetchHolidayEventTitles retrieves the titles of holiday events for the given date from the specified temporary directory.
+// It returns an error if fetching the holiday events fails.
+func fetchHolidayEventTitles(dt value.DateJp, tempDir string) ([]string, error) {
 	k, err := koyomi.NewSource(
 		koyomi.WithCalendarID(koyomi.Holiday),
 		koyomi.WithStartDate(dt),
 		koyomi.WithEndDate(dt),
+		koyomi.WithTempDir(tempDir),
 	).Get()
 	if err != nil {
 		return nil, err
@@ -128,11 +135,14 @@ func fetchHolidayEventTitles(dt value.DateJp) ([]string, error) {
 	return titles, nil
 }
 
-func fetchSolarTermEventTitles(dt value.DateJp) ([]string, error) {
+// fetchSolarTermEventTitles retrieves the titles of solar term events for the given date from the specified temporary directory.
+// It returns an error if fetching the solar term events fails.
+func fetchSolarTermEventTitles(dt value.DateJp, tempDir string) ([]string, error) {
 	k, err := koyomi.NewSource(
 		koyomi.WithCalendarID(koyomi.SolarTerm, koyomi.MoonPhase, koyomi.Eclipse),
 		koyomi.WithStartDate(dt),
 		koyomi.WithEndDate(dt),
+		koyomi.WithTempDir(tempDir),
 	).Get()
 	if err != nil {
 		return nil, err

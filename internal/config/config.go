@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/goark/errs"
+	"github.com/goark/gocli/cache"
 	cfg "github.com/goark/gocli/config"
 	"github.com/goark/today/internal/ecode"
 )
@@ -18,12 +19,15 @@ type Config struct {
 	OtherEventsFlag bool   `pflag:"other-events,e,show other events information"`
 	AllEventsFlag   bool   `pflag:"all-events,a,show all events information"`
 	EventFile       string `pflag:"event-file,,path to the event file"`
+	JSONFlag        bool   `pflag:"json,j,output information in JSON format"`
+	TempDir         string `pflag:"temp-dir,,path to the temporary directory"`
 }
 
 // DefaultConfig returns a default Config instance.
 func DefaultConfig(appName string) *Config {
 	return &Config{
 		EventFile: cfg.Path(appName, "event.json"),
+		TempDir:   cache.Dir(appName),
 	}
 }
 
@@ -49,6 +53,14 @@ func (c *Config) IsHoliday() bool {
 		return false
 	}
 	return c.AllEventsFlag || c.HolidayFlag
+}
+
+// IsJSON returns true if the JSON flag is set.
+func (c *Config) IsJSON() bool {
+	if c == nil {
+		return false
+	}
+	return c.JSONFlag
 }
 
 // IsSolarTerm returns true if the solar term flag is set.

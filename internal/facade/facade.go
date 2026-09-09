@@ -71,7 +71,11 @@ func run(ui *rwi.RWI, args []string, ver versionString) error {
 	}
 
 	// Show information for the determined date.
-	if err := today.ShowInformation(ui.Writer(), dt, cfg); err != nil {
+	if cfg.IsJSON() {
+		if err := today.ShowInformationJSON(ui.Writer(), dt, cfg); err != nil {
+			return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", dt)))
+		}
+	} else if err := today.ShowInformation(ui.Writer(), dt, cfg); err != nil {
 		return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", dt)))
 	}
 	return nil
