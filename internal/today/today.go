@@ -15,7 +15,7 @@ import (
 // It returns an error if the date is zero or if writing to the writer fails.
 func ShowInformationJSON(w io.Writer, dt value.DateJp, cfg *config.Config) error {
 	// Get the detailed information of the date in JSON format.
-	i, err := informationJSON(w, dt, cfg)
+	i, err := informationJSON(dt, cfg)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", dt))
 	}
@@ -31,7 +31,7 @@ func ShowInformationJSON(w io.Writer, dt value.DateJp, cfg *config.Config) error
 // It returns an error if the date is zero or if writing to the writer fails.
 func ShowInformation(w io.Writer, dt value.DateJp, cfg *config.Config) error {
 	// Get the detailed information of the date in JSON format.
-	i, err := informationJSON(w, dt, cfg)
+	i, err := informationJSON(dt, cfg)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", dt))
 	}
@@ -44,7 +44,7 @@ func ShowInformation(w io.Writer, dt value.DateJp, cfg *config.Config) error {
 
 // informationJSON retrieves the detailed information of the given date in JSON format.
 // It returns an error if the date is zero or if importing any information fails.
-func informationJSON(w io.Writer, dt value.DateJp, cfg *config.Config) (info *InfoDate, err error) {
+func informationJSON(dt value.DateJp, cfg *config.Config) (info *InfoDate, err error) {
 	// Check if the provided date is zero. If it is, return an error.
 	if dt.IsZero() {
 		return nil, errs.Wrap(ecode.ErrZeroValue)
