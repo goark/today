@@ -1,2 +1,3 @@
 # today
-Show information for today
+
+Show information for today.
