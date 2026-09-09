@@ -4,6 +4,8 @@ import "errors"
 
 var (
 	ErrNullPointer = errors.New("null reference instance")
+	ErrZeroValue   = errors.New("zero value")
+	ErrNoEventFile = errors.New("no event file specified")
 )
 
 /* Copyright 2026 Spiegel

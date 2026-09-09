@@ -7,10 +7,12 @@ import (
 	"github.com/goark/errs"
 	"github.com/goark/gocli/exitcode"
 	"github.com/goark/gocli/rwi"
+	"github.com/goark/koyomi/value"
 	"github.com/goark/struct2pflag"
 	"github.com/spf13/pflag"
 
 	"github.com/goark/today/internal/config"
+	"github.com/goark/today/internal/misc"
 	"github.com/goark/today/internal/today"
 )
 
@@ -54,23 +56,23 @@ func run(ui *rwi.RWI, args []string, ver versionString) error {
 	}
 
 	// If the version flag is set, print version information and exit
-	if cfg.VersionFlag {
+	if cfg.IsVersion() {
 		return debugPrint(ui, cfg, errs.Wrap(ui.Outputln(ver)))
 	}
 
 	// Determine the date for which to show information. Default is today.
-	tm := time.Now()
+	dt := value.NewDate(time.Now())
 	if fs.NArg() > 0 {
-		if parsedTime, err := time.Parse("2006-01-02", fs.Arg(0)); err == nil {
-			tm = parsedTime
+		if parsedDate, err := misc.DateFrom(fs.Arg(0)); err == nil {
+			dt = parsedDate
 		} else {
 			return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", fs.Arg(0))))
 		}
 	}
 
 	// Show information for the determined date.
-	if err := today.ShowInformation(ui.Writer(), tm, cfg); err != nil {
-		return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", tm)))
+	if err := today.ShowInformation(ui.Writer(), dt, cfg); err != nil {
+		return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", dt)))
 	}
 	return nil
 }
@@ -79,7 +81,7 @@ func debugPrint(ui *rwi.RWI, cfg *config.Config, err error) error {
 	if err == nil {
 		return nil
 	}
-	if cfg.DebugFlag {
+	if cfg.IsDebug() {
 		if perr := ui.Outputln(errs.EncodeJSON(err)); perr != nil {
 			err = errs.Join(err, perr)
 		}

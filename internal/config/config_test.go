@@ -1,8 +1,13 @@
 package config
 
 import (
+	"io"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/goark/errs"
+	"github.com/goark/today/internal/ecode"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -21,6 +26,67 @@ func TestDefaultConfig(t *testing.T) {
 	}
 	if !strings.HasSuffix(cfg.EventFile, "/today/event.json") {
 		t.Fatalf("EventFile = %q, want suffix %q", cfg.EventFile, "/today/event.json")
+	}
+}
+
+func TestConfigFlagHelpers(t *testing.T) {
+	var nilCfg *Config
+	if nilCfg.IsVersion() || nilCfg.IsDebug() || nilCfg.IsHoliday() || nilCfg.IsSolarTerm() || nilCfg.IsOtherEvents() {
+		t.Fatal("nil config helper should return false")
+	}
+
+	cfg := &Config{}
+	if cfg.IsVersion() || cfg.IsDebug() || cfg.IsHoliday() || cfg.IsSolarTerm() || cfg.IsOtherEvents() {
+		t.Fatal("default helper flags should be false")
+	}
+
+	cfg.VersionFlag = true
+	cfg.DebugFlag = true
+	cfg.HolidayFlag = true
+	cfg.SolarTermFlag = true
+	cfg.OtherEventsFlag = true
+	if !cfg.IsVersion() || !cfg.IsDebug() || !cfg.IsHoliday() || !cfg.IsSolarTerm() || !cfg.IsOtherEvents() {
+		t.Fatal("helper flags should reflect explicit flags")
+	}
+
+	cfg = &Config{AllEventsFlag: true}
+	if !cfg.IsHoliday() || !cfg.IsSolarTerm() || !cfg.IsOtherEvents() {
+		t.Fatal("AllEventsFlag should enable holiday/solar-term/other-events")
+	}
+}
+
+func TestOpenEvent(t *testing.T) {
+	var nilCfg *Config
+	if _, err := nilCfg.OpenEvent(); !errs.Is(err, ecode.ErrNoEventFile) {
+		t.Fatalf("nilCfg.OpenEvent() error = %v, want %v", err, ecode.ErrNoEventFile)
+	}
+
+	emptyPath := &Config{}
+	if _, err := emptyPath.OpenEvent(); !errs.Is(err, ecode.ErrNoEventFile) {
+		t.Fatalf("emptyPath.OpenEvent() error = %v, want %v", err, ecode.ErrNoEventFile)
+	}
+
+	missing := &Config{EventFile: t.TempDir() + "/missing.json"}
+	if _, err := missing.OpenEvent(); !errs.Is(err, ecode.ErrNoEventFile) {
+		t.Fatalf("missing.OpenEvent() error = %v, want %v", err, ecode.ErrNoEventFile)
+	}
+
+	tmp := t.TempDir() + "/event.json"
+	if err := os.WriteFile(tmp, []byte("[]"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+	good := &Config{EventFile: tmp}
+	r, err := good.OpenEvent()
+	if err != nil {
+		t.Fatalf("good.OpenEvent() error = %v", err)
+	}
+	defer r.Close()
+	b, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("ReadAll() error = %v", err)
+	}
+	if string(b) != "[]" {
+		t.Fatalf("event file content = %q, want %q", string(b), "[]")
 	}
 }
 
