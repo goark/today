@@ -1,31 +1,36 @@
 package config
 
 import (
-	"errors"
-	"flag"
-	"fmt"
-	"io"
+	cfg "github.com/goark/gocli/config"
 )
 
-var ErrHelp = errors.New("help requested")
-
+// Config represents toptags command options.
 type Config struct {
-	ShowVersion bool
+	VersionFlag bool   `pflag:"version,v,show version information"`
+	DebugFlag   bool   `pflag:"debug,,enable debug mode"`
+	EventFile   string `pflag:"event-file,,path to the event file"`
 }
 
-func Parse(args []string, errOut io.Writer) (*Config, error) {
-	fs := flag.NewFlagSet("today", flag.ContinueOnError)
-	fs.SetOutput(errOut)
-
-	cfg := &Config{}
-	fs.BoolVar(&cfg.ShowVersion, "version", false, "show version")
-
-	if err := fs.Parse(args); err != nil {
-		if errors.Is(err, flag.ErrHelp) {
-			return nil, fmt.Errorf("%w", ErrHelp)
-		}
-		return nil, err
+// DefaultConfig returns a default Config instance.
+func DefaultConfig(appName string) *Config {
+	return &Config{
+		VersionFlag: false,
+		DebugFlag:   false,
+		EventFile:   cfg.Path(appName, "event.json"),
 	}
-
-	return cfg, nil
 }
+
+/* Copyright 2026 Spiegel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */

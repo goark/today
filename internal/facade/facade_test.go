@@ -1,25 +1,16 @@
-package main
+package facade
 
 import (
-	"os"
+	"testing"
 
-	"github.com/goark/gocli/rwi"
-	"github.com/goark/today/internal/facade"
+	"github.com/goark/gocli/exitcode"
 )
 
-// Version of the application for build info, will be replaced by build script
-var Version = ""
-
-func main() {
-	facade.Execute(
-		rwi.New(
-			rwi.WithReader(os.Stdin),
-			rwi.WithWriter(os.Stdout),
-			rwi.WithErrorWriter(os.Stderr),
-		),
-		Version,
-		os.Args[1:],
-	).ExitIfNotNormal()
+func TestExecute_NilUI(t *testing.T) {
+	got := Execute(nil, "v1.2.3", []string{"--version"})
+	if got != exitcode.Abnormal {
+		t.Fatalf("Execute(nil, ...) = %v, want %v", got, exitcode.Abnormal)
+	}
 }
 
 /* Copyright 2026 Spiegel
