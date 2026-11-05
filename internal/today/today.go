@@ -1,6 +1,7 @@
 package today
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,9 +14,9 @@ import (
 
 // ShowInformationJSON writes the detailed information of the given date in JSON format to the provided writer.
 // It returns an error if the date is zero or if writing to the writer fails.
-func ShowInformationJSON(w io.Writer, dt value.DateJp, cfg *config.Config) error {
+func ShowInformationJSON(ctx context.Context, w io.Writer, dt value.DateJp, cfg *config.Config) error {
 	// Get the detailed information of the date in JSON format.
-	i, err := informationJSON(dt, cfg)
+	i, err := informationJSON(ctx, dt, cfg)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", dt))
 	}
@@ -29,9 +30,9 @@ func ShowInformationJSON(w io.Writer, dt value.DateJp, cfg *config.Config) error
 
 // ShowInformation writes the detailed information of the given date to the provided writer.
 // It returns an error if the date is zero or if writing to the writer fails.
-func ShowInformation(w io.Writer, dt value.DateJp, cfg *config.Config) error {
+func ShowInformation(ctx context.Context, w io.Writer, dt value.DateJp, cfg *config.Config) error {
 	// Get the detailed information of the date in JSON format.
-	i, err := informationJSON(dt, cfg)
+	i, err := informationJSON(ctx, dt, cfg)
 	if err != nil {
 		return errs.Wrap(err, errs.WithContext("date", dt))
 	}
@@ -44,7 +45,7 @@ func ShowInformation(w io.Writer, dt value.DateJp, cfg *config.Config) error {
 
 // informationJSON retrieves the detailed information of the given date in JSON format.
 // It returns an error if the date is zero or if importing any information fails.
-func informationJSON(dt value.DateJp, cfg *config.Config) (info *InfoDate, err error) {
+func informationJSON(ctx context.Context, dt value.DateJp, cfg *config.Config) (info *InfoDate, err error) {
 	// Check if the provided date is zero. If it is, return an error.
 	if dt.IsZero() {
 		return nil, errs.Wrap(ecode.ErrZeroValue)
@@ -54,14 +55,14 @@ func informationJSON(dt value.DateJp, cfg *config.Config) (info *InfoDate, err e
 
 	// import holiday information if the holiday flag is set
 	if cfg.IsHoliday() {
-		if err := i.ImportHoliday(cfg.TempDir); err != nil {
+		if err := i.ImportHoliday(ctx, cfg.TempDir); err != nil {
 			return nil, errs.Wrap(err, errs.WithContext("date", dt))
 		}
 	}
 
 	// import solar term information if the solar term flag is set
 	if cfg.IsSolarTerm() { // import solar term information if the solar term flag is set
-		if err := i.ImportSolarTerm(cfg.TempDir); err != nil {
+		if err := i.ImportSolarTerm(ctx, cfg.TempDir); err != nil {
 			return nil, errs.Wrap(err, errs.WithContext("date", dt))
 		}
 	}

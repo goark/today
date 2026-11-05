@@ -2,6 +2,7 @@ package today
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestShowInformation_ZeroDate(t *testing.T) {
-	err := ShowInformation(&bytes.Buffer{}, value.NewDate(time.Time{}), &config.Config{})
+	err := ShowInformation(context.Background(), &bytes.Buffer{}, value.NewDate(time.Time{}), &config.Config{})
 	if err == nil {
 		t.Fatal("ShowInformation() error = nil, want non-nil")
 	}
@@ -28,7 +29,7 @@ func TestShowInformation_ZeroDate(t *testing.T) {
 func TestShowInformation_BasicOutput(t *testing.T) {
 	dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 	buf := &bytes.Buffer{}
-	err := ShowInformation(buf, dt, &config.Config{})
+	err := ShowInformation(context.Background(), buf, dt, &config.Config{})
 	if err != nil {
 		t.Fatalf("ShowInformation() error = %v", err)
 	}
@@ -47,7 +48,7 @@ func TestShowInformation_OtherEventsFromFile(t *testing.T) {
 	}
 	cfg := &config.Config{OtherEventsFlag: true, EventFile: tmp}
 	buf := &bytes.Buffer{}
-	err := ShowInformation(buf, dt, cfg)
+	err := ShowInformation(context.Background(), buf, dt, cfg)
 	if err != nil {
 		t.Fatalf("ShowInformation() error = %v", err)
 	}
@@ -59,7 +60,7 @@ func TestShowInformation_OtherEventsFromFile(t *testing.T) {
 func TestShowInformationJSON_BasicOutput(t *testing.T) {
 	dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 	buf := &bytes.Buffer{}
-	err := ShowInformationJSON(buf, dt, &config.Config{})
+	err := ShowInformationJSON(context.Background(), buf, dt, &config.Config{})
 	if err != nil {
 		t.Fatalf("ShowInformationJSON() error = %v", err)
 	}
@@ -89,11 +90,11 @@ func TestShowInformationJSON_TempDirPropagation(t *testing.T) {
 
 	gotHolidayTempDir := ""
 	gotSolarTempDir := ""
-	holidayEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+	holidayEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 		gotHolidayTempDir = tempDir
 		return []string{"holiday-a"}, nil
 	}
-	solarTermEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+	solarTermEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 		gotSolarTempDir = tempDir
 		return []string{"solar-a"}, nil
 	}
@@ -101,7 +102,7 @@ func TestShowInformationJSON_TempDirPropagation(t *testing.T) {
 	dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 	cfg := &config.Config{HolidayFlag: true, SolarTermFlag: true, TempDir: "/tmp/today-test"}
 	buf := &bytes.Buffer{}
-	err := ShowInformationJSON(buf, dt, cfg)
+	err := ShowInformationJSON(context.Background(), buf, dt, cfg)
 	if err != nil {
 		t.Fatalf("ShowInformationJSON() error = %v", err)
 	}
@@ -119,13 +120,13 @@ func TestShowInformationJSON_TempDirPropagation(t *testing.T) {
 func TestShowInformationJSON_HolidayError(t *testing.T) {
 	origHoliday := holidayEventTitlesFetcher
 	t.Cleanup(func() { holidayEventTitlesFetcher = origHoliday })
-	holidayEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+	holidayEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 		return nil, errors.New("holiday fetch error")
 	}
 
 	dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 	cfg := &config.Config{HolidayFlag: true, TempDir: "/tmp/today-test"}
-	err := ShowInformationJSON(&bytes.Buffer{}, dt, cfg)
+	err := ShowInformationJSON(context.Background(), &bytes.Buffer{}, dt, cfg)
 	if err == nil {
 		t.Fatal("ShowInformationJSON() error = nil, want non-nil")
 	}
