@@ -1,6 +1,9 @@
 package facade
 
 import (
+	"context"
+	"os"
+	"os/signal"
 	"runtime"
 	"time"
 
@@ -70,12 +73,16 @@ func run(ui *rwi.RWI, args []string, ver versionString) error {
 		}
 	}
 
+	// Create a context that listens for OS interrupt signals (e.g., Ctrl+C)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	// Show information for the determined date.
 	if cfg.IsJSON() {
-		if err := today.ShowInformationJSON(ui.Writer(), dt, cfg); err != nil {
+		if err := today.ShowInformationJSON(ctx, ui.Writer(), dt, cfg); err != nil {
 			return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", dt)))
 		}
-	} else if err := today.ShowInformation(ui.Writer(), dt, cfg); err != nil {
+	} else if err := today.ShowInformation(ctx, ui.Writer(), dt, cfg); err != nil {
 		return debugPrint(ui, cfg, errs.Wrap(err, errs.WithContext("date", dt)))
 	}
 	return nil

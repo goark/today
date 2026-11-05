@@ -1,6 +1,7 @@
 package today
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -53,12 +54,12 @@ func TestInfoDate_ImportHoliday(t *testing.T) {
 	t.Cleanup(func() { holidayEventTitlesFetcher = orig })
 
 	t.Run("success", func(t *testing.T) {
-		holidayEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+		holidayEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 			return []string{"holiday-a"}, nil
 		}
 		dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 		i := NewInfoDate(dt)
-		if err := i.ImportHoliday("tempDir"); err != nil {
+		if err := i.ImportHoliday(context.Background(), "tempDir"); err != nil {
 			t.Fatalf("ImportHoliday() error = %v", err)
 		}
 		if len(i.Events) != 1 || i.Events[0] != "holiday-a" {
@@ -67,12 +68,12 @@ func TestInfoDate_ImportHoliday(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
-		holidayEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+		holidayEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 			return nil, errors.New("holiday fetch error")
 		}
 		dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 		i := NewInfoDate(dt)
-		err := i.ImportHoliday("tempDir")
+		err := i.ImportHoliday(context.Background(), "tempDir")
 		if err == nil {
 			t.Fatal("ImportHoliday() error = nil, want non-nil")
 		}
@@ -87,12 +88,12 @@ func TestInfoDate_ImportSolarTerm(t *testing.T) {
 	t.Cleanup(func() { solarTermEventTitlesFetcher = orig })
 
 	t.Run("success", func(t *testing.T) {
-		solarTermEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+		solarTermEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 			return []string{"solar-a", "moon-a"}, nil
 		}
 		dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 		i := NewInfoDate(dt)
-		if err := i.ImportSolarTerm("tempDir"); err != nil {
+		if err := i.ImportSolarTerm(context.Background(), "tempDir"); err != nil {
 			t.Fatalf("ImportSolarTerm() error = %v", err)
 		}
 		if len(i.Events) != 2 || i.Events[0] != "solar-a" || i.Events[1] != "moon-a" {
@@ -101,12 +102,12 @@ func TestInfoDate_ImportSolarTerm(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
-		solarTermEventTitlesFetcher = func(dt value.DateJp, tempDir string) ([]string, error) {
+		solarTermEventTitlesFetcher = func(ctx context.Context, dt value.DateJp, tempDir string) ([]string, error) {
 			return nil, errors.New("solar fetch error")
 		}
 		dt := value.NewDate(time.Date(2026, time.September, 9, 0, 0, 0, 0, time.Local))
 		i := NewInfoDate(dt)
-		err := i.ImportSolarTerm("tempDir")
+		err := i.ImportSolarTerm(context.Background(), "tempDir")
 		if err == nil {
 			t.Fatal("ImportSolarTerm() error = nil, want non-nil")
 		}
@@ -118,10 +119,10 @@ func TestInfoDate_ImportSolarTerm(t *testing.T) {
 
 func TestInfoDate_ImportCalendar_NilReceiver(t *testing.T) {
 	var i *InfoDate
-	if err := i.ImportHoliday("tempDir"); !errs.Is(err, ecode.ErrNullPointer) {
+	if err := i.ImportHoliday(context.Background(), "tempDir"); !errs.Is(err, ecode.ErrNullPointer) {
 		t.Fatalf("nil.ImportHoliday() error = %v, want %v", err, ecode.ErrNullPointer)
 	}
-	if err := i.ImportSolarTerm("tempDir"); !errs.Is(err, ecode.ErrNullPointer) {
+	if err := i.ImportSolarTerm(context.Background(), "tempDir"); !errs.Is(err, ecode.ErrNullPointer) {
 		t.Fatalf("nil.ImportSolarTerm() error = %v, want %v", err, ecode.ErrNullPointer)
 	}
 }
