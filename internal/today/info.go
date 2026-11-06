@@ -124,7 +124,6 @@ func fetchHolidayEventTitles(ctx context.Context, dt value.DateJp, tempDir strin
 		koyomi.WithCalendarID(koyomi.Holiday),
 		koyomi.WithStartDate(dt),
 		koyomi.WithEndDate(dt),
-		koyomi.WithTempDir(tempDir),
 	).Get(ctx)
 	if err != nil {
 		return nil, err
@@ -143,7 +142,6 @@ func fetchSolarTermEventTitles(ctx context.Context, dt value.DateJp, tempDir str
 		koyomi.WithCalendarID(koyomi.SolarTerm, koyomi.MoonPhase, koyomi.Eclipse),
 		koyomi.WithStartDate(dt),
 		koyomi.WithEndDate(dt),
-		koyomi.WithTempDir(tempDir),
 	).Get(ctx)
 	if err != nil {
 		return nil, err
